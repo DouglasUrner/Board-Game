@@ -6,16 +6,18 @@ public class Board : MonoBehaviour {
 	[Header("Set in Inspector")]
 	public int width = 10;
 	public int height = 10;
-	public GameObject squarePrefab;
 	public float squareScale = 0.95f;
+	public GameObject squarePrefab;
+	public Material squareMaterial;
 
-	public Vector3[,] board;
+	private static Vector3[,] _board;
 	
 	/*
 	 * Create the board.
 	 */
-	private void Start() {
-		BuildBoard("Board");
+	private void Awake() {
+		print("Board.Awake()");
+		BuildBoard("Board", Camera.main);
 	}
 
 	/*
@@ -27,9 +29,10 @@ public class Board : MonoBehaviour {
 	 * by the argument name. By default we center the main camera on the board.
 	 * If centerCamera is false the camera location is unchanged.
 	 */
-	public void BuildBoard(string name, bool centerCamera = true) {
+	public void BuildBoard(string name, Camera camera = null) {
+		print("BuildBoard()");
 		// Create the board array.
-		board = new Vector3[width, height];
+		_board = new Vector3[width, height];
 		
 		// Create an empty GameObject to hold the board's squares.
 		GameObject boardGO = new GameObject();
@@ -39,23 +42,31 @@ public class Board : MonoBehaviour {
 		// boardGO and then set their locations and scale.
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
-				board[x, y] = new Vector3(x, y, 0);
+				_board[x, y] = new Vector3(x, y, 0);
 				
 				// Add a square for this space as a child of the boardGO.
 				GameObject sq = Instantiate(squarePrefab);
 				sq.transform.parent = boardGO.transform;
-				sq.transform.position = board[x, y];
+				sq.transform.position = _board[x, y];
 				sq.transform.localScale = 
 					new Vector3(squareScale, squareScale, squareScale);
+				if (squareMaterial != null) {
+					MeshRenderer mr = sq.GetComponent<MeshRenderer>();
+					mr.material = squareMaterial;
+				}
 				sq.name = squarePrefab.name + " (" + x + ", " + y + ")";
 			}
 		}
 		
 		// Center the main camera on the board.
-		if (centerCamera) {
-			Camera.main.transform.position =
+		if (camera != null) {
+			camera.transform.position =
 				new Vector3(width / 2f, (height - 1) / 2f,
-					Camera.main.transform.position.z);
+					camera.transform.position.z);
 		}
+	}
+	
+	public static Vector3[,] board {
+		get { print("Board.board - get()");return _board; }
 	}
 }
